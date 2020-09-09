@@ -45,10 +45,31 @@ public class Server {
     }
 
     public void broadcastMsg(ClientHandler sender, String msg) {
-        String message = String.format("%s: %s", sender.getNickname(), msg);
+        String message = "";
+        String nickReceiver = "";
 
-        for (ClientHandler c : clients) {
-            c.sendMsg(message);
+        if (msg.startsWith("/w") && msg.replaceAll("[^ ]", "").length() >= 2) {
+            String[] msgSplit = msg.split("\\s", 3);
+            nickReceiver = msgSplit[1];
+            message = String.format("%s -> %s: %s", sender.getNickname(), nickReceiver, msgSplit[2]);
+
+            boolean isSent = false;
+
+            for (ClientHandler c : clients) {
+                if (c.getNickname().equals(nickReceiver)) {
+                    c.sendMsg(message);
+                    isSent = true;
+                    break;
+                }
+            }
+            sender.sendMsg(isSent ? message : String.format("Сообщение не доставлено, пользователя с ником %s не существует", nickReceiver));
+
+        } else if (!msg.startsWith("/w")) {
+            message = String.format("%s: %s", sender.getNickname(), msg);
+
+            for (ClientHandler c : clients) {
+                c.sendMsg(message);
+            }
         }
     }
 
